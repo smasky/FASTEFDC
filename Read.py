@@ -9,7 +9,7 @@ import re
 import numpy as np
 import math
 import globalvalue as gb
-from numba import jit
+#$from numba import jit
 def Read_cell(IC,JC):
     '''
         网格读取文件 IC行数 JC列数 默认文件名：cell.inp
@@ -182,7 +182,65 @@ def Read_Pser(Pnum):
     gb.set_value('PSER',PSER)
     gb.set_value('MPSER',MPSER)
 
-@jit
+def Read_Qinp(NQSIJ):
+    with open('NQSIJ.inp') as f:
+        string=f.readlines()
+    num=0
+    QINF=np.zeros((6,NQSIJ))
+    QINF[:]=0
+    LIJ=gb.get_value('LIJ')
+    for line in string:
+        if('#' in line):
+            pass
+        else:
+            result=line.strip('\n').split(' ')
+            IQS=int(result[0])
+            QINF[0,num]=IQS
+            JQS=int(result[1])
+            QINF[1,num]=JQS
+            QCON=result[2]
+            QINF[2,num]=QCON
+            QSFACTOR=result[3]
+            QINF[3,num]=QSFACTOR
+            QID=result[4]
+            QINF[4,num]=QID
+            QL=LIJ[IQS][JQS]
+            QINF[5,num]=QL
+            num+=1
+    gb.set_value('QINF',QINF)
+def Read_Pinp(NPSIJ):
+    with open('NPSIJ.inp') as f:
+        string=f.readlines()
+    num=0
+    PINF=np.zeros((6,NPSIJ))
+    PINF[:]=0
+    LIJ=gb.get_value('LIJ')
+    for line in string:
+        if('#' in line):
+            pass
+        else:
+            result=line.strip('\n').split(' ')
+            IPS=int(result[0])
+            PINF[0,num]=IPS
+            JPS=int(result[1])
+            PINF[1,num]=JPS
+            PCON=result[2]
+            PINF[2,num]=PCON
+            PID=result[3]
+            PINF[3,num]=PID
+            PL=LIJ[IPS][JPS]
+            PINF[4,num]=PL
+            PREND=result[4]
+            PINF[5,num]=PREND
+            num+=1
+    gb.set_value('PINF',PINF)
+
+
+    
+
+
+##########################################################
+#@jit
 def sign(x2):
     if(x2<0):
         return -1
