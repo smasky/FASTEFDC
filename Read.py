@@ -119,9 +119,9 @@ def Read_Qser(Qnum,KC):
         return:QSER MQSER
     '''
     pattern=re.compile(r'\s+')
-    MQSER=np.zeros((1,Qnum))
+    MQSER=np.arange(Qnum)
     QSER=np.zeros((1,KC+1))
-    with open(r'C:\Users\sky\Desktop\EFDC-MPI-master\SampleModels\Simple_DA_example\qser.inp','r') as f:
+    with open(r'qser.inp','r') as f:
         string=f.readlines()
     num=0
     for i in range(Qnum):
@@ -136,7 +136,7 @@ def Read_Qser(Qnum,KC):
         result=np.array(pattern.sub(' ',stringL[0].strip()).split(' '),dtype=np.float)
 
         lineNum=int(result[1])
-        MQSER[0][i]=lineNum
+        MQSER[i]=lineNum
         for j in range(lineNum):
             num+=1
             line=string[num]
@@ -236,7 +236,7 @@ def Read_Pinp(NPSIJ):
     gb.set_value('PINF',PINF)
 
 
-    
+
 
 
 ##########################################################
