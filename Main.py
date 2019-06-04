@@ -3,7 +3,7 @@ import Tools as tl
 import Read as rd
 import globalvalue as gb
 ##############################
-DT=10 #一个时间步的长度
+DT=0.349903 #一个时间步的长度
 DTDN=36400 #时间步数
 IC=55 #列
 AHO=1 #水平黏性扩散系数
@@ -30,7 +30,11 @@ VU=np.arange(LC,dtype=np.float)
 V1U=np.arange(LC,dtype=np.float)
 AH=np.zeros((LC,KC),dtype=np.float)
 SNLT=1
+Du=np.zeros((LC,KC),dtype=np.float)
+Dv=np.zeros((LC,KC),dtype=np.float)
 gb._init()
+gb.set_value('Du',Du)
+gb.set_value('Dv',Dv)
 gb.set_value('SNLT',SNLT)
 gb.set_value('KC',KC)
 gb.set_value('N',N)
@@ -56,6 +60,7 @@ gb.set_value('V1U',V1U)
 gb.set_value('DT',DT)
 gb.set_value('DZC',DZC)
 gb.set_value('AHO',AHO)
+gb.set_value('AVO',AVO)
 ################################
 ###开始
 ########################
@@ -149,12 +154,16 @@ FMDUX=np.zeros((LC,KC),dtype=np.float)
 FMDUY=np.zeros((LC,KC),dtype=np.float)
 FMDVX=np.zeros((LC,KC),dtype=np.float)
 FMDVY=np.zeros((LC,KC),dtype=np.float)
+FCAX=np.zeros((LC,KC),dtype=np.float)
+FCAY=np.zeros((LC,KC),dtype=np.float)
 FCAXE=np.arange(LC,dtype=np.float)#科氏力
 FCAYE=np.arange(LC,dtype=np.float)#科氏力
 FXE=np.arange(LC,dtype=np.float)
 FX=np.zeros((LC,KC),dtype=np.float)
 FY=np.zeros((LC,KC),dtype=np.float)
 FYE=np.arange(LC,dtype=np.float)
+gb.set_value('FCAX',FCAX)
+gb.set_value('FCAY',FCAY)
 gb.set_value('FX',FX)
 gb.set_value('FY',FY)
 gb.set_value('FCAXE',FCAXE)
@@ -200,13 +209,20 @@ gb.set_value('FUHDYE',FUHDYE)
 gb.set_value('FVHDXE',FVHDXE)
 #####################################
 ####HDMT2
-tl.Reset_1V()
+tl.Reset_1V()#H1p H1u H1v UHDY1E VHDX1E U1 V1 UHDY1 VHDX1
 tl.Cal_UV_VU(IC,JC,KC,LC)
 tl.Cal_init_STBXY(IC,JC,KC,LC)
 tl.Cal_STBXY(IC,JC,LC)
 tl.Cal_HDMF(IC,JC,LC,KC)
 N=1
+#SET BOTTOM AND SURFACE TURBULENT INTENSITY SQUARED 
 for i in range(DTDN):
     tl.Cal_Exp2T(IC,JC,LC,KC)
     tl.Cal_QVS(IC,JC,LC,KC)
     tl.Cal_External(IC,JC,LC,KC)
+    tl.Reset_1V()##倒一下变量
+    tl.Cal_UV_VU(IC,JC,KC,LC)
+    tl.Cal_STBXY(IC,JC,LC)
+    tl.Cal_HDMF(IC,JC,LC,KC)
+
+

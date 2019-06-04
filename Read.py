@@ -224,7 +224,7 @@ def Read_Pinp(NPSIJ):
             PINF[0,num]=IPS
             JPS=int(result[1])
             PINF[1,num]=JPS
-            PCON=result[2]
+            PCON=float(result[2])*9.81
             PINF[2,num]=PCON
             PID=result[3]
             PINF[3,num]=PID
