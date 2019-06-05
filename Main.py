@@ -4,7 +4,7 @@ import globalvalue as gb
 import Tools as tl
 ##############################
 DT=0.349903 #一个时间步的长度
-DTDN=100 #时间步数
+DTDN=200 #时间步数
 IC=55 #列
 AHO=0 #水平黏性扩散系数
 AHD=1 #控制水平扩散

@@ -202,8 +202,10 @@ def Cal_Sub_Svb(IC,JC,LC):
     LSC=gb.get_value('LSC')
     LIJ=gb.get_value('LIJ')
     SPB=gb.get_value('SPB')
-    SAAX=np.ones((LC,KC),dtype=np.float)
-    SAAY=np.ones((LC,KC),dtype=np.float)
+    SAAX=np.arange(LC,dtype=np.float)
+    SAAX[:]=1
+    SAAY=np.arange(LC,dtype=np.float)
+    SAAY[:]=1
     for i in range(NPSIJ):
         PREND=PINF[5,i]
         ii=int(PINF[0,i])
@@ -500,7 +502,7 @@ def Cal_UV_VU(IC,JC,KC,LC):
         LSW=LSWC[L]
         UV[L]=0.25*(Hp[LS])*(U[LSE,0]+U[LS,0])+Hp[L]*(U[L+1,0]+U[L,0])*Hvi[L]
         U1V[L]=0.25*(H1p[LS])*(U1[LSE,0]+U1[LS,0])+H1p[L]*(U1[L+1,0]+U1[L,0])*Hv1i[L]
-        VU[L]=0.25*(Hp[L-1]*(V[LNW,0]+V[L-1,0])+Hp[L]*(V[LN,0]+V[L,1]))*Hui[L]
+        VU[L]=0.25*(Hp[L-1]*(V[LNW,0]+V[L-1,0])+Hp[L]*(V[LN,0]+V[L,0]))*Hui[L]
         V1U[L]=0.25*(H1p[L-1]*(V1[LNW,0]+V1[L-1,0])+H1p[L]*(V1[LN,0]+V1[L,0]))*Hu1i[L]
         L+=1
     gb.set_value('UV',UV)
@@ -539,7 +541,7 @@ def Cal_UV_VU_2(IC,JC,KC,LC):
         LNW=LNWC[L]
         LSW=LSWC[L]
         UV[L]=0.25*(Hp[LS])*(U[LSE,0]+U[LS,0])+Hp[L]*(U[L+1,0]+U[L,0])*Hvi[L]
-        VU[L]=0.25*(Hp[L-1]*(V[LNW,0]+V[L-1,0])+Hp[L]*(V[LN,0]+V[L,1]))*Hui[L]
+        VU[L]=0.25*(Hp[L-1]*(V[LNW,0]+V[L-1,0])+Hp[L]*(V[LN,0]+V[L,0]))*Hui[L]
         L+=1
     gb.set_value('UV',UV)
     gb.set_value('U1V',U1V)
@@ -660,9 +662,11 @@ def Cal_HDMF(IC,JC,LC,KC):
             if(Svb[L]>0.5 and Svb[LW]<0.5):
                 ICORDXV[L]=3
             L+=1
-        gb.get_value('ICORDXV',ICORDXV)
-        gb.get_value('ICORDYU',ICORDYU)
+        gb.set_value('ICORDXV',ICORDXV)
+        gb.set_value('ICORDYU',ICORDYU)
         ######################################
+    ICORDYU=gb.get_value('ICORDYU')
+    ICORDXV=gb.get_value('ICORDXV')
     Dxu1=gb.get_value('Dxu1')
     Dyv1=gb.get_value('Dyv1')
     Dyu1=gb.get_value('Dyu1')
@@ -857,7 +861,7 @@ def Cal_Exp2T(IC,JC,LC,KC):
         L=LBERC[i]
         LL=LBNRC[i]
         FX[L,:]=SAAX[L]*FX[L,:]
-        FY[LL,:]=SAAY[L]*FY[LL,:]
+        FY[LL,:]=SAAY[LL]*FY[LL,:]
     ##########################
     ##################################
     #######水平动量扩散
@@ -890,10 +894,12 @@ def Cal_Exp2T(IC,JC,LC,KC):
         for k in range(KC):
             if(k==0):
                 FF=0
+                FA=0
             else:
                 FF=FWU[L,k-1]
-            FX[L,k]=FX[L,k]+(FWU[L,k]-FF)/DZC[k]
-            FY[L,k]=FY[L,k]+(FWV[L,k]-FF)/DZC[k]
+                FA=FWV[L,k-1]
+            FX[L,k]=FX[L,k]+SAAX[L]*(FWU[L,k]-FF)/DZC[k]
+            FY[L,k]=FY[L,k]+SAAY[L]*(FWV[L,k]-FA)/DZC[k]
         L+=1
     ############################
     ###计算内部剪切力项
@@ -908,10 +914,10 @@ def Cal_Exp2T(IC,JC,LC,KC):
         Du[L,KC-1]=0
         Dv[L,KC-1]=0
         for k in range(KC-1):
-            CDZF=DZC[k]*DZC[k+1]/(DZC[k+1]+DZC[k+1])
+            CDZF=DZC[k]*DZC[k+1]/(DZC[k]+DZC[k+1])
             Du[L,k]=CDZF*(Hu[L]*(U[L,k+1]-U[L,k]))/DT+(FCAX[L,k+1]-FCAX[L,k]+SNLT*(FX[L,k]-FX[L,k+1]))/Dxyu[L]
-            Dv[L,k]=CDZF*(Hv[L]*(V[L,k+1]-V[L,k+1]))/DT+(FCAY[L,k+1]-FCAY[L,k+1]+SNLT*(FY[L,k]-FY[L,k+1]))/Dxyv[L]
-
+            Dv[L,k]=CDZF*(Hv[L]*(V[L,k+1]-V[L,k]))/DT+(FCAY[L,k+1]-FCAY[L,k+1]+SNLT*(FY[L,k]-FY[L,k+1]))/Dxyv[L]
+        L+=1
     #######################
     gb.set_value('Du',Du)
     gb.set_value('Dv',Dv)
