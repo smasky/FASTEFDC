@@ -1,14 +1,14 @@
 import numpy as np
-import Tools as tl
 import Read as rd
 import globalvalue as gb
+import Tools as tl
 ##############################
 DT=0.349903 #一个时间步的长度
-DTDN=36400 #时间步数
+DTDN=100 #时间步数
 IC=55 #列
-AHO=1 #水平黏性扩散系数
+AHO=0 #水平黏性扩散系数
 AHD=1 #控制水平扩散
-AVO=0.001 #垂直黏性扩散系数
+AVO=0.000001 #垂直黏性扩散系数
 JC=15 #行
 KC=3  #层数
 LC=563 #一头一尾
@@ -32,7 +32,18 @@ AH=np.zeros((LC,KC),dtype=np.float)
 SNLT=1
 Du=np.zeros((LC,KC),dtype=np.float)
 Dv=np.zeros((LC,KC),dtype=np.float)
+CDZR=np.arange(KC,dtype=np.float)
+CDZD=np.arange(KC,dtype=np.float)
+SPB=np.arange(LC)
+SPB[:]=1
+LBERC=np.arange(NPSIJ+NQSIJ)
+LBNRC=np.arange(NPSIJ+NQSIJ)
 gb._init()
+gb.set_value('LBERC',LBERC)
+gb.set_value('LBNRC',LBNRC)
+gb.set_value('SPB',SPB)
+gb.set_value('CDZR',CDZR)
+gb.set_value('CDZD',CDZD)
 gb.set_value('Du',Du)
 gb.set_value('Dv',Dv)
 gb.set_value('SNLT',SNLT)
@@ -75,6 +86,7 @@ rd.Read_Qinp(NQSIJ)
 rd.Read_Pinp(NPSIJ)
 tl.Cal_Sub_Svb(IC,JC,LC)
 tl.Cal_reset_Dx_Dy_Rss(IC,JC,LC)
+tl.Cal_CDZC(KC)
 #处理QSER,MQSER
 ################################################
 #初始化 一部分变量
@@ -90,6 +102,8 @@ UHDY=np.zeros((LC,KC),dtype=np.float)
 UHDY[:]=0
 VHDX=np.zeros((LC,KC),dtype=np.float)
 VHDX[:]=0
+UHDY1=UHDY.copy()
+VHDX1=VHDX.copy()
 U2=np.zeros((LC,KC),dtype=np.float)
 V2=np.zeros((LC,KC),dtype=np.float)
 W2=np.zeros((LC,KC),dtype=np.float)
@@ -106,6 +120,22 @@ QSUME[:]=0
 QSUM1E=np.arange(LC,dtype=np.float)
 QSUM1E[:]=0
 QSUM=np.zeros((LC,KC),dtype=np.float)
+CU1=np.zeros((LC,KC),dtype=np.float)
+CU2=np.zeros((LC,KC),dtype=np.float)
+UUU=np.zeros((LC,KC),dtype=np.float)
+VVV=np.zeros((LC,KC),dtype=np.float)
+AAU=np.arange(LC,dtype=np.float)
+AAV=np.arange(LC,dtype=np.float)
+BBU=np.arange(LC,dtype=np.float)
+BBV=np.arange(LC,dtype=np.float)
+gb.set_value('AAU',AAU)
+gb.set_value('AAV',AAV)
+gb.set_value('BBU',BBU)
+gb.set_value('BBV',BBV)
+gb.set_value('UUU',UUU)
+gb.set_value('VVV',VVV)
+gb.set_value('CU1',CU1)
+gb.set_value('CU2',CU2)
 gb.set_value('QSUME',QSUME)
 gb.set_value('QSUM1E',QSUM1E)
 gb.set_value('QSUM',QSUM)
@@ -128,6 +158,8 @@ gb.set_value('UHDYE',UHDYE)
 gb.set_value('VHDXE',VHDXE)
 gb.set_value('UHDY',UHDY)
 gb.set_value('VHDX',VHDX)
+gb.set_value('UHDY1',UHDY1)
+gb.set_value('VHDX1',VHDX1)
 #######################################
 #弗劳德数
 CFLUUU=np.zeros((LC,KC),dtype=np.float)
@@ -215,14 +247,21 @@ tl.Cal_init_STBXY(IC,JC,KC,LC)
 tl.Cal_STBXY(IC,JC,LC)
 tl.Cal_HDMF(IC,JC,LC,KC)
 N=1
-#SET BOTTOM AND SURFACE TURBULENT INTENSITY SQUARED 
+#SET BOTTOM AND SURFACE TURBULENT INTENSITY SQUARED
 for i in range(DTDN):
     tl.Cal_Exp2T(IC,JC,LC,KC)
     tl.Cal_QVS(IC,JC,LC,KC)
     tl.Cal_External(IC,JC,LC,KC)
-    tl.Reset_1V()##倒一下变量
-    tl.Cal_UV_VU(IC,JC,KC,LC)
+    tl.Reset_2V()##倒一下变量
+    tl.Cal_UVW(IC,JC,KC,LC)
+    tl.Cal_UV_VU_2(IC,JC,KC,LC)
     tl.Cal_STBXY(IC,JC,LC)
     tl.Cal_HDMF(IC,JC,LC,KC)
-
-
+    Hp=gb.get_value('Hp')
+    if(N==19):
+        print(N)
+    N+=1
+    Hp=gb.get_value('Hp')
+    print(Hp)
+    print(N)
+###############################

@@ -57,7 +57,7 @@ def Cal_LCT_IL_JL(IC,JC,LC):
                 JL[L]=j+1
                 LIJ[i+1][j+1]=L
                 L+=1
-    print(L)
+    #print(L)
     L=1
     for i in range(LC-2):
         ii=IL[L]
@@ -194,11 +194,14 @@ def Cal_Sub_Svb(IC,JC,LC):
     Svb[-1]=0
     ################################
     #边界
+    LBERC=gb.get_value('LBERC')
+    LBNRC=gb.get_value('LBNRC')
     PINF=gb.get_value('PINF')
     NPSIJ=gb.get_value('NPSIJ')
     LNC=gb.get_value('LNC')
     LSC=gb.get_value('LSC')
     LIJ=gb.get_value('LIJ')
+    SPB=gb.get_value('SPB')
     SAAX=np.ones((LC,KC),dtype=np.float)
     SAAY=np.ones((LC,KC),dtype=np.float)
     for i in range(NPSIJ):
@@ -206,6 +209,7 @@ def Cal_Sub_Svb(IC,JC,LC):
         ii=int(PINF[0,i])
         jj=int(PINF[1,i])
         L=LIJ[ii][jj]
+        SPB[L]=0
         if(PREND==0):#东
             Svb[L]=0
             Svb[L-1]=0
@@ -220,13 +224,13 @@ def Cal_Sub_Svb(IC,JC,LC):
             SAAY[L]=0
             SAAX[LN]=0
             SAAY[LN]=0
-        elif(PREND==2):#北
+        elif(PREND==3):#北
             Sub[L]=0
             LS=LSC[L]
             SAAX[L]=0
             SAAY[L]=0
             Sub[LS]=0
-        elif(PREND==3):#西
+        elif(PREND==2):#西
             Sub[L]=0
             Svb[L]=0
             Svb[L+1]=0
@@ -234,9 +238,65 @@ def Cal_Sub_Svb(IC,JC,LC):
             SAAY[L]=0
             SAAX[L+1]=0
             SAAY[L+1]=0
+    QINF=gb.get_value('QINF')
+    NQSIJ=gb.get_value('NQSIJ')
+    NBCS=0
+    for i in  range(NQSIJ):
+        L=int(QINF[5,i])
+        LBERC[NBCS]=L
+        if(Sub[L]>0.5):
+            SAAX[L]=0
+            SAAY[L]=0
+        if(L<LC-4):
+            if(Sub[L]<0.5 and (Sub[L+1]>0.5 and Sub[L+2]>0.5)):
+                B=L+1
+                LBERC[NBCS]=B
+                SAAX[B]=0
+                SAAY[B]=0
+        if(L>1 and L<LC-2):
+            if((Sub[L]>0.5 and Sub[L+1]<0.5) and (Sub[L-1]>0.5 and Sub[L-2]>0.5) ):
+                B=L-1
+                LBERC[NBCS]=B
+                SAAX[B]=0
+                SAAY[B]=0
+                SAAX[L]=0
+                SAAY[L]=0
+        LBNRC[NBCS]=L
+        if(Svb[L]<0.5):
+            SAAX[L]=0
+            SAAY[L]=0
+        if(Svb[L]<0.5 and (Svb[LNC[L]]>0.5 and Svb[LNC[LNC[L]]]>0.5)):
+            LBNRC[NBCS]=LNC[L]
+            SAAX[LNC[L]]=0
+            SAAY[LNC[L]]=0
+        if(Svb[L]>0.5 and Svb[LNC[L]]<0.5 and (Svb[LSC[L]]>0.5 and Svb[LSC[LSC[L]]]>0.5)):
+            LBNRC[NBCS]=LSC[L]
+            SAAX[LNC[L]]=0
+            SAAY[LNC[L]]=0
+            SAAX[L]=0
+            SAAY[L]=0
+        NBCS+=1
+    for i in range(NPSIJ):
+        PREND=PINF[5,i]
+        L=int(PINF[4,i])
+        if(PREND==0):#东
+            LBERC[NBCS]=L-1
+            LBNRC[NBCS]=L
+        elif(PREND==1):#南
+            LBERC[NBCS]=L
+            LBNRC[NBCS]=LNC[L]
+        elif(PREND==3):#北
+            LBERC[NBCS]=L
+            LBNRC[NBCS]=LSC[L]
+        elif(PREND==2):#北
+            LBERC[NBCS]=L+1
+            LBNRC[NBCS]=L
+        NBCS+=1
     Subo=Sub.copy() #Sub origin
     Svbo=Svb.copy() #Svb origin
     ##########################边界
+    gb.set_value('LBERC',LBERC)
+    gb.set_value('LBNRC',LBNRC)
     gb.set_value('Sub',Sub)
     gb.set_value('Svb',Svb)
     gb.set_value('Subo',Subo)
@@ -447,7 +507,44 @@ def Cal_UV_VU(IC,JC,KC,LC):
     gb.set_value('U1V',U1V)
     gb.set_value('VU',VU)
     gb.set_value('V1U',V1U)
-
+def Cal_UV_VU_2(IC,JC,KC,LC):
+    '''
+        计算Uv、Vu的值
+    '''
+    LNC=gb.get_value('LNC')
+    LSC=gb.get_value('LSC')
+    LNWC=gb.get_value('LNWC')
+    LNEC=gb.get_value('LNEC')
+    LSWC=gb.get_value('LSWC')
+    LSEC=gb.get_value('LSEC')
+    UV=gb.get_value('UV')
+    VU=gb.get_value('VU')
+    Hp=gb.get_value('Hp')
+    H1p=gb.get_value('H1p')
+    U=gb.get_value('U')
+    U1=gb.get_value('U1')
+    V=gb.get_value('V')
+    V1=gb.get_value('V1')
+    Hvi=gb.get_value('Hvi')
+    Hv1i=gb.get_value('Hv1i')
+    Hui=gb.get_value('Hui')
+    Hu1i=gb.get_value('Hu1i')
+    U1V=UV.copy()
+    V1U=VU.copy()
+    L=1
+    for i in range(LC-2):
+        LN=LNC[L]
+        LS=LSC[L]
+        LSE=LSEC[L]
+        LNW=LNWC[L]
+        LSW=LSWC[L]
+        UV[L]=0.25*(Hp[LS])*(U[LSE,0]+U[LS,0])+Hp[L]*(U[L+1,0]+U[L,0])*Hvi[L]
+        VU[L]=0.25*(Hp[L-1]*(V[LNW,0]+V[L-1,0])+Hp[L]*(V[LN,0]+V[L,1]))*Hui[L]
+        L+=1
+    gb.set_value('UV',UV)
+    gb.set_value('U1V',U1V)
+    gb.set_value('VU',VU)
+    gb.set_value('V1U',V1U)
 def Cal_init_STBXY(IC,JC,KC,LC):
     '''
         STBXY的初始化
@@ -745,6 +842,8 @@ def Cal_Exp2T(IC,JC,LC,KC):
     SAAY=gb.get_value('SAAY')
     NQSIJ=gb.get_value('NQSIJ')
     NPSIJ=gb.get_value('NPSIJ')
+    LBERC=gb.get_value('LBERC')
+    LBNRC=gb.get_value('LBNRC')
     for i in range(NQSIJ):
         L=int(QINF[5,i])
         FX[L,:]=SAAX[L]*FX[L,:]
@@ -754,6 +853,11 @@ def Cal_Exp2T(IC,JC,LC,KC):
         L=int(PINF[4,i])
         FX[L,:]=SAAX[L]*FX[L,:]
         FY[L,:]=SAAY[L]*FY[L,:]
+    for i in range(NPSIJ+NQSIJ):
+        L=LBERC[i]
+        LL=LBNRC[i]
+        FX[L,:]=SAAX[L]*FX[L,:]
+        FY[LL,:]=SAAY[L]*FY[LL,:]
     ##########################
     ##################################
     #######水平动量扩散
@@ -784,8 +888,12 @@ def Cal_Exp2T(IC,JC,LC,KC):
     L=1
     for i in range(LC-2):
         for k in range(KC):
-            FX[L,k]=FX[L,k]+(FWU[L,k]-FWU[L,k-1])/DZC[k]
-            FY[L,k]=FY[L,k]+(FWV[L,k]-FWV[L,k-1])/DZC[k]
+            if(k==0):
+                FF=0
+            else:
+                FF=FWU[L,k-1]
+            FX[L,k]=FX[L,k]+(FWU[L,k]-FF)/DZC[k]
+            FY[L,k]=FY[L,k]+(FWV[L,k]-FF)/DZC[k]
         L+=1
     ############################
     ###计算内部剪切力项
@@ -799,14 +907,14 @@ def Cal_Exp2T(IC,JC,LC,KC):
     for i in range(LC-2):
         Du[L,KC-1]=0
         Dv[L,KC-1]=0
-        for k in KC-1:
+        for k in range(KC-1):
             CDZF=DZC[k]*DZC[k+1]/(DZC[k+1]+DZC[k+1])
             Du[L,k]=CDZF*(Hu[L]*(U[L,k+1]-U[L,k]))/DT+(FCAX[L,k+1]-FCAX[L,k]+SNLT*(FX[L,k]-FX[L,k+1]))/Dxyu[L]
-            Dv[L,k]=CDZF*(Hv[L]*(V[L,k+1]-v[L,k+1]))/DT+(FCAY[L,k+1]-FCAY[L,k+1]+SNLT*(FY[L,k]-FY[L,k+1]))/Dxyv[L]
-    
-
+            Dv[L,k]=CDZF*(Hv[L]*(V[L,k+1]-V[L,k+1]))/DT+(FCAY[L,k+1]-FCAY[L,k+1]+SNLT*(FY[L,k]-FY[L,k+1]))/Dxyv[L]
 
     #######################
+    gb.set_value('Du',Du)
+    gb.set_value('Dv',Dv)
     gb.set_value('FX',FX)
     gb.set_value('FY',FY)
     gb.set_value('FXE',FXE)
@@ -855,7 +963,6 @@ def Cal_QVS(IC,JC,LC,KC):
         QSUM[L,:]=QQ*QFACTOR+QCON*DZC
         for ii in range(KC):
             QSUME[L]=QSUME[L]+QSUM[L,ii]
-    print(QSUME)
     gb.set_value('QSUM',QSUM)
     gb.set_value('QSUME',QSUME)
     gb.set_value('QSUM1E',QSUM1E)
@@ -929,12 +1036,12 @@ def Cal_OBC():
     gb.set_value('CN',CN)
     gb.set_value('CE',CE)
     gb.set_value('FP',FP)
- 
 
 
-        
 
-        
+
+
+
 def Cal_External(IC,JC,LC,KC):
     '''
         外模态计算水位 U V
@@ -982,7 +1089,16 @@ def Cal_External(IC,JC,LC,KC):
         FUHDYE[L]=UHDYE[L]-DT2*Sub[L]*Hruo[L]*Hu[L]*(P[L]-P[L-1])+Sub[L]*DT/Dxu[L]*(Dxyu[L]*(TSX[L]-RITB1*TBX[L])-SNLT*FXE[L])
         FVHDXE[L]=VHDXE[L]-DT2*Svb[L]*Hrvo[L]*Hv[L]*(P[L]-P[LS])+Svb[L]*DT/Dyv[L]*(Dxyv[L]*(TSX[L]-RITB1*TBY[L])-SNLT*FYE[L])
         L+=1
-
+    RCX=np.arange(LC,dtype=np.float)
+    RCY=np.arange(LC,dtype=np.float)
+    RCX[:]=1
+    RCY[:]=1
+    RCX[0]=0
+    RCY[0]=0
+    RCX[-1]=0
+    RCY[-1]=0
+    gb.set_value('RCX',RCX)
+    gb.set_value('RCY',RCY)
     Sub=Subo.copy()
     Svb=Svbo.copy()
     QSUME=gb.get_value('QSUME')
@@ -993,6 +1109,8 @@ def Cal_External(IC,JC,LC,KC):
     H1v=Hv.copy()
     UHDY1E=UHDYE.copy()
     VHDX1E=VHDXE.copy()
+    gb.set_value('UHDY1E',UHDY1E)
+    gb.set_value('VHDX1E',VHDX1E)
     P1=P.copy()
     H1p=Hp.copy()
     Dxyp=gb.get_value('Dxyp')
@@ -1055,13 +1173,13 @@ def Cal_External(IC,JC,LC,KC):
     CCCI=1.0/CCC
     CCCI[0]=0
     CCCI[-1]=0
-    print(CCS)
-    print(CCW)
-    print(CCE)
-    print(CCN)
-    print(CCC)
-    print(FPTMP)
-    #666到此一游
+    #print(CCS)
+    #print(CCW)
+    ##print(CCE)
+   # print(CCN)
+   # print(CCC)
+   # print(FPTMP)
+   # #666到此一游
     gb.set_value('CCS',CCS)
     gb.set_value('CCW',CCW)
     gb.set_value('CCE',CCE)
@@ -1073,7 +1191,7 @@ def Cal_External(IC,JC,LC,KC):
     ####梯度下降法求解
     Cal_congrad(LC)
     P=gb.get_value('P')
-    print(P)
+   # print(P)
     UHE=gb.get_value('UHE')
     VHE=gb.get_value('VHE')
     L=1
@@ -1174,13 +1292,360 @@ def Cal_congrad(LC):
         RPCGN=0.0
         RPCGN=np.sum(RCG*TMPCG)
         RSQ=np.sum(RCG*RCG)
-        if(RSQ<0.000000001):
+        if(RSQ<1E-10):
             break
         BETA=RPCGN/RPCG
         RPCG=RPCGN
         PCG=TMPCG+BETA*PCG
     gb.set_value('P',P)
+#########################################
+def Cal_CDZC(KC):
+    DZC=gb.get_value('DZC')
+    CDZD=gb.get_value('CDZD')
+    CDZR=gb.get_value('CDZR')
+    CDZR[0]=DZC[0]-1
+    CDZD[0]=DZC[0]
+    for k in range(1,KC-1):
+        CDZR[k]=DZC[k]+CDZR[k-1]
+        CDZD[k]=DZC[k]+CDZD[k-1]
+    for k in range(KC-1):
+        CDZR[k]=CDZR[k]*(0.5*(DZC[k]+DZC[k+1]))*(-DZC[1]/(DZC[0]+DZC[1]))
+    gb.set_value('CDZR',CDZR)
+    gb.set_value('CDZD',CDZD)
 ######################################
+def Reset_2V():
+    '''
+        倒腾一下变量
+    '''
+    UHDY1=gb.get_value('UHDY1')
+    UHDY=gb.get_value('UHDY')
+    VHDX1=gb.get_value('VHDX1')
+    VHDX=gb.get_value('VHDX')
+    U1=gb.get_value('U1')
+    V1=gb.get_value('V1')
+    W1=gb.get_value('W1')
+    U=gb.get_value('U')
+    V=gb.get_value('V')
+    W=gb.get_value('W')
+
+    UHDY2=UHDY1.copy()
+    UHDY1=UHDY.copy()
+    VHDX2=VHDX1.copy()
+    VHDX1=VHDX.copy()
+    U2=U1.copy()
+    U1=U.copy()
+    V2=V1.copy()
+    V1=V.copy()
+    W2=W1.copy()
+    W1=W.copy()
+    gb.set_value('UHDY2',UHDY2)
+    gb.set_value('UHDY1',UHDY1)
+    gb.set_value('UHDY',UHDY)
+    gb.set_value('VHDX',VHDX)
+    gb.set_value('VHDX1',VHDX1)
+    gb.set_value('VHDX2',VHDX2)
+    gb.set_value('U',U)
+    gb.set_value('U1',U1)
+    gb.set_value('U2',U2)
+    gb.set_value('V',V)
+    gb.set_value('V1',V1)
+    gb.set_value('V2',V2)
+    gb.set_value('W',W)
+    gb.set_value('W1',W1)
+    gb.set_value('W2',W2)
+###########################################
+def Cal_UVW(IC,JC,KC,LC):
+    DZC=gb.get_value('DZC')
+    DT=gb.get_value('DT')
+    AVO=gb.get_value('AVO')
+    Hu=gb.get_value('Hu')
+    Hv=gb.get_value('Hv')
+    Du=gb.get_value('Du')
+    Dv=gb.get_value('Dv')
+    RCX=gb.get_value('RCX')
+    RCY=gb.get_value('RCY')
+    U1=gb.get_value('U1')
+    V1U=gb.get_value('V1U')
+    U=gb.get_value('U')
+    VU=gb.get_value('VU')
+    UV=gb.get_value('UV')
+    V=gb.get_value('V')
+    V1=gb.get_value('V1')
+    U1V=gb.get_value('U1V')
+    STBX=gb.get_value('STBX')
+    STBY=gb.get_value('STBY')
+    ###########################
+    L=1
+    for i in range(LC-2):
+        Q1=math.sqrt(U1[L,0]*U1[L,0]+V1U[L]*V1U[L])
+        Q2=math.sqrt(U[L,0]*U[L,0]+VU[L]*VU[L])
+        RCX[L]=STBX[L]*math.sqrt(Q1*Q2)
+        Q1=math.sqrt(U1V[L]*U1V[L]+V1[L,0]*V1[L,0])
+        Q2=math.sqrt(UV[L]*UV[L]+V[L,0]*V[L,0])
+        RCY[L]=STBY[L]*math.sqrt(Q1*Q2)
+        L+=1
+
+    ######################
+    CU1=gb.get_value('CU1')
+    CU2=gb.get_value('CU2')
+    UHE=gb.get_value('UHE')
+    VHE=gb.get_value('VHE')
+    UUU=gb.get_value('UUU')
+    VVV=gb.get_value('VVV')
+    CDZM=DZC[0]*DZC[1]*0.5/DT
+    CDZU=-DZC[0]/(DZC[0]+DZC[1])
+    CDZL=-DZC[1]/(DZC[0]+DZC[1])
+    L=1
+    for i in range(LC-2):
+        CMU=1.0+CDZM*Hu[L]/AVO
+        CMV=1.0+CDZM*Hv[L]/AVO
+        EU=1.0/CMU
+        EV=1.0/CMV
+        CU1[L,0]=CDZU*EU
+        CU2[L,0]=CDZU*EV
+        Du[L,0]=(Du[L,0]-CDZL*RCX[L]*UHE[L]/Hu[L])*EU
+        Dv[L,0]=(Dv[L,0]-CDZL*RCY[L]*VHE[L]/Hv[L])*EV
+        UUU[L,0]=EU
+        UUU[L,1]=EV
+        L+=1
+
+    L=1
+    for i in range(LC-2):
+        for k in range(1,KC-1):
+            CDZM=DZC[k]*DZC[k+1]*0.5/DT
+            CDZU=-DZC[k]/(DZC[k]+DZC[k+1])
+            CDZL=-DZC[k+1]/(DZC[k]+DZC[k+1])
+            CMU=1.0+CDZM*Hu[L]/AVO
+            CMV=1.0+CDZM*Hv[L]/AVO
+            EU=1.0/CMU
+            EV=1.0/CMV
+            CU1[L,k]=CDZU*EU
+            CU2[L,k]=CDZU*EV
+            Du[L,k]=(Du[L,k]-CDZL*RCX[L]*UHE[L]/Hu[L])*EU
+            Dv[L,k]=(Dv[L,k]-CDZL*RCY[L]*VHE[L]/Hv[L])*EV
+            UUU[L,k]=-CDZL*UUU[L,k-1]*EU
+            VVV[L,k]=-CDZL*VVV[L,k-1]*EV
+        L+=1
+    L=1
+    for i in range(LC-2):
+        for k in range(KC-3,-1,-1):
+            Du[L,k]=Du[L,k]-CU1[L,k]*Du[L,k+1]
+            Dv[L,k]=Dv[L,k]-CU2[L,k]*Dv[L,k+1]
+            UUU[L,k]=UUU[L,k]-CU1[L,k]*UUU[L,k+1]
+            VVV[L,k]=VVV[L,k]-CU2[L,k]*VVV[L,k+1]
+        L+=1
+
+    AAU=gb.get_value('AAU')
+    AAV=gb.get_value('AAV')
+    BBU=gb.get_value('BBU')
+    BBV=gb.get_value('BBV')
+    AAU[:]=0
+    AAV[:]=0
+    BBU[1:-1]=1
+    BBV[1:-1]=1
+    CDZR=gb.get_value('CDZR')
+    for k in range(KC-1):
+        RCDZR=CDZR[k]
+        L=1
+        for i in range(LC-2):
+            CRU=RCDZR*RCX[L]/AVO
+            CRV=RCDZR*RCY[L]/AVO
+            AAU[L]=AAU[L]+CRU*Du[L,k]
+            AAV[L]=AAV[L]+CRV*Dv[L,k]
+            BBU[L]=BBU[L]+CRU*UUU[L,k]
+            BBV[L]=BBV[L]+CRV*VVV[L,k]
+            L+=1
+    L=1
+    for i in range(LC-2):
+        AAU[L]=AAU[L]/BBU[L]
+        AAV[L]=AAV[L]/BBV[L]
+        L+=1
+
+    for k in range(KC-1):
+        RDZG=0.5*(DZC[k]+DZC[k+1])
+        L=1
+        for i in range(LC-2):
+            Du[L,k]=RDZG*Hu[L]/AVO*(Du[L,k]-AAU[L]*UUU[L,k])
+            Dv[L,k]=RDZG*Hv[L]/AVO*(Dv[L,k]-AAV[L]*VVV[L,k])
+            L+=1
+    CDZD=gb.get_value('CDZD')
+    for k in range(KC-1):
+        RCDZD=CDZD[k]
+        L=1
+        for i in range(LC-2):
+            UHE[L]=UHE[L]+RCDZD*Du[L,k]
+            VHE[L]=VHE[L]+RCDZD*Dv[L,k]
+            L+=1
+    Sub=gb.get_value('Sub')
+    Svb=gb.get_value('Svb')
+    UHDY=gb.get_value('UHDY')
+    VHDX=gb.get_value('VHDX')
+    UHDY[:,KC-1]=UHE*Sub
+    VHDX[:,KC-1]=VHE*Svb
+    for k in range(KC-2,-1,-1):
+        L=1
+        for i in range(LC-2):
+            UHDY[L,k]=UHDY[L,k+1]-Du[L,k]*Sub[L]
+            VHDX[L,k]=VHDX[L,k+1]-Dv[L,k]*Svb[L]
+            L+=1
+
+    Dyu=gb.get_value('Dyu')
+    Dxv=gb.get_value('Dxv')
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            U[L,k]=UHDY[L,k]/Hu[L]
+            V[L,k]=VHDX[L,k]/Hv[L]
+            UHDY[L,k]=UHDY[L,k]*Dyu[L]
+            VHDX[L,k]=VHDX[L,k]*Dxv[L]
+            L+=1
+    #############################
+    TVAR3E=np.arange(LC,dtype=np.float)
+    TVAR3N=np.arange(LC,dtype=np.float)
+    TVAR3E[:]=0
+    TVAR3N[:]=0
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            TVAR3E[L]=TVAR3E[L]+UHDY[L,k]*DZC[k]
+            TVAR3N[L]=TVAR3N[L]+VHDX[L,k]*DZC[k]
+            L+=1
+    UERMX=-1.0E+12
+    UERMN=1.0E+12
+    VERMX=-1.0E+12
+    VERMN=1.0E+12
+    UHDYE=gb.get_value('UHDYE')
+    VHDXE=gb.get_value('VHDXE')
+    L=1
+    for i in range(LC-2):
+        TVAR3E[L]=TVAR3E[L]-UHDYE[L]
+        TVAR3N[L]=TVAR3N[L]-VHDXE[L]
+        L+=1
+
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            UHDY[L,k]=UHDY[L,k]-TVAR3E[L]/DZC[k]
+            VHDX[L,k]=VHDX[L,k]-TVAR3N[L]/DZC[k]
+            L+=1
+    #####################################
+    #重置速度
+    UHE[:]=0
+    VHE[:]=0
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            UHE[L]=UHE[L]+UHDY[L,k]*DZC[k]
+            VHE[L]=VHE[L]+VHDX[L,k]*DZC[k]
+            U[L,k]=UHDY[L,k]/Hu[L]
+            V[L,k]=VHDX[L,k]/Hv[L]
+            L+=1
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            U[L,k]=U[L,k]/Dyu[L]
+            V[L,k]=V[L,k]/Dxv[L]
+            L+=1
+    L=1
+    for i in range(LC-2):
+        UHE[L]=UHE[L]/Dyu[L]
+        VHE[L]=VHE[L]/Dxv[L]
+        L+=1
+    #################################
+    ####计算W
+    W=gb.get_value('W')
+    Dxyp=gb.get_value('Dxyp')
+    UHDY1E=gb.get_value('UHDY1E')
+    UHDY1=gb.get_value('UHDY1')
+    VHDX1=gb.get_value('VHDX1')
+    VHDX1E=gb.get_value('VHDX1E')
+    QSUM=gb.get_value('QSUM')
+    QSUME=gb.get_value('QSUME')
+    LNC=gb.get_value('LNC')
+
+    for k in range(KC-1):
+        L=1
+        for i in range(LC-2):
+            LN=LNC[L]
+            LE=L+1
+            if(k==0):
+                WW=0
+            else:
+                WW=W[L,k-1]
+            W[L,k]=WW-0.5*DZC[k]/Dxyp[L]*(UHDY[LE,k]-UHDY[L,k]-UHDYE[LE]+UHDYE[L]+UHDY1[LE,k]-UHDY1[L,k]-UHDY1E[LE]+UHDY1E[L]+VHDX[LN,k]-VHDX[L,k]-VHDXE[LN]+VHDXE[L]+VHDX1[LN,k]-VHDX1[L,k]-VHDX1E[LN]+VHDX1E[L])+(QSUM[L,k]-DZC[k]*QSUME[L])/Dxyp[L]
+            L+=1
+
+    #########################
+    PINF=gb.get_value('PINF')
+    NPSIJ=gb.get_value('NPSIJ')
+    for i in range(NPSIJ):
+        L=int(PINF[4,i])
+        for k in range(KC-1):
+            W[L,k]=0
+    ##############################
+    UHDY2=gb.get_value('UHDY2')
+    VHDX2=gb.get_value('VHDX2')
+    U2=gb.get_value('U2')
+    V2=gb.get_value('V2')
+    W2=gb.get_value('W2')
+    U1=gb.get_value('U1')
+    V1=gb.get_value('V1')
+    W1=gb.get_value('W1')
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            UHDY2[L,k]=0.5*(UHDY[L,k]+UHDY1[L,k])
+            VHDX2[L,k]=0.5*(VHDX[L,k]+VHDX1[L,k])
+            U2[L,k]=0.5*(U[L,k]+U1[L,k])
+            V2[L,k]=0.5*(V[L,k]+V1[L,k])
+            W2[L,k]=0.5*(W[L,k]+W1[L,k])
+            L+=1
+    gb.set_value('U2',U2)
+    gb.set_value('V2',V2)
+    gb.set_value('W2',W2)
+    gb.set_value('U1',U1)
+    gb.set_value('V1',V1)
+    gb.set_value('W1',W1)
+    gb.set_value('U',U)
+    gb.set_value('V',V)
+    gb.set_value('W',W)
+    gb.set_value('UHE',UHE)
+    gb.set_value('VHE',VHE)
+    gb.set_value('UHDY2',UHDY2)
+    gb.set_value('VHDX2',VHDX2)
+    gb.set_value('UHDY',UHDY)
+    gb.set_value('VHDX',VHDX)
+    gb.set_value('UHDY1',UHDY1)
+    gb.set_value('VHDX1',VHDX1)
+    gb.set_value('UHDYE',UHDY1E)
+    gb.set_value('VHDXE',VHDXE)
+    gb.set_value('UHDY1E',UHDY1E)
+    gb.set_value('VHDX1E',VHDX1E)
+    ############################
+    L=1
+    TVAR3E[:]=0
+    TVAR3N[:]=0
+    for k in range(KC):
+        L=1
+        for i in range(LC-2):
+            TVAR3E[L]=TVAR3E[L]+UHDY2[L,k]*DZC[k]
+            TVAR3N[L]=TVAR3N[L]+VHDX2[L,k]*DZC[k]
+            L+=1
+    #################################
+    L=1
+    Hp=gb.get_value('Hp')
+    H1p=gb.get_value('H1p')
+    P=gb.get_value('P')
+    Belv=gb.get_value('Belv')
+    SPB=gb.get_value('SPB')
+    for i in range(LC-2):
+        LN=LNC[L]
+        HPPTMP=H1p[L]+DT/Dxyp[L]*(QSUME[L]-TVAR3E[L+1]+TVAR3E[L]-TVAR3N[LN]+TVAR3N[L])
+        Hp[L]=SPB[L]*HPPTMP+(1.0-SPB[L])*(1/9.81*P[L]-Belv[L])
+        L+=1
+###########################################
+    gb.set_value('Hp',Hp)
+
 def Reset_1V():
     '''
         倒腾一下变量
@@ -1214,20 +1679,3 @@ def Reset_1V():
     gb.set_value('V1',V1)
     gb.set_value('UHDY1',UHDY1)
     gb.set_value('VHDX1',VHDX1)
-###########################################
-def Cal_UVW(IC,JC,KC,LC):
-    DZC=gb.get_value('DZC')
-    DT=gb.get_value('DT')
-    AVO=gb.get_value('AVO')
-    Hu=gb.get_value('Hu')
-    Hv=gb.get_value('Hv')
-    Du=gb.get_value('Du')
-    Dv=gb.get_value('Dv')
-    CDZM=DZC[0]*DZC[1]*0.5/DT
-    CDZU=-DZC[0]/(DZC[0]+DZC[1])
-    CDZL=-DZC[1]/(DZC[0]+DZC[1])
-    L=1
-    for i in range(LC-2):
-        CMU=1.0+CDZM*Hu[L]/AVO
-        CMV=1.0+CDZM*Hv[L]/AVO
-        Du[L,1]=Du[L,1]
