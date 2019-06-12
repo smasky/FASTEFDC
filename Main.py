@@ -2,7 +2,10 @@ import numpy as np
 import Read as rd
 import globalvalue as gb
 import Tools as tl
+import numba
+import time
 ##############################
+A=time.clock()
 DT=0.349903 #一个时间步的长度
 DTDN=200 #时间步数
 IC=55 #列
@@ -249,6 +252,8 @@ tl.Cal_HDMF(IC,JC,LC,KC)
 N=1
 #SET BOTTOM AND SURFACE TURBULENT INTENSITY SQUARED
 for i in range(DTDN):
+    if(N==2):
+        start=time.clock()
     tl.Cal_Exp2T(IC,JC,LC,KC)
     tl.Cal_QVS(IC,JC,LC,KC)
     tl.Cal_External(IC,JC,LC,KC)
@@ -258,10 +263,10 @@ for i in range(DTDN):
     tl.Cal_STBXY(IC,JC,LC)
     tl.Cal_HDMF(IC,JC,LC,KC)
     Hp=gb.get_value('Hp')
-    if(N==19):
-        print(N)
     N+=1
     Hp=gb.get_value('Hp')
-    print(Hp)
-    print(N)
+end=time.clock()
+B=time.clock()
+print(A-B)
+print(start-end)
 ###############################

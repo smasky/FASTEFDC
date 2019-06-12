@@ -6,10 +6,11 @@
     :license: MIT, see LICENSE for more details.
 工具类的文件 主要包括计算SUB SVB DXU DXV DYU DYV等
 """
-#from numba import jit
+from numba import jit
 import numpy as np
 import globalvalue as gb
 import math
+@jit
 def Cal_LCT_IL_JL(IC,JC,LC):
     '''
     计算LCT,IL,JL LC网格个数 Dxp Dyp Hmp
@@ -111,7 +112,6 @@ def Cal_LCT_IL_JL(IC,JC,LC):
     gb.set_value('Zbr',Zbrl)
     gb.set_value('P',P)
 
-
 def Cal_Dx_Dy_HM(IC,JC,LC):
     '''
         计算Dxu Dyu Dxv Dyv Hu Hv
@@ -161,7 +161,7 @@ def Cal_Dx_Dy_HM(IC,JC,LC):
     gb.set_value('Hv1i',Hv1i)
     gb.set_value('Hu1i',Hu1i)
 
-#@jit
+@jit
 def Cal_Sub_Svb(IC,JC,LC):
     '''
         计算Sub Svb
@@ -307,7 +307,6 @@ def Cal_Sub_Svb(IC,JC,LC):
     gb.set_value('SAAY',SAAY)
 
 
-#@jit
 def Cal_reset_Dx_Dy_Rss(IC,JC,LC):
     '''
         根据网格关系重新计算DXU DXV DYU DYV
@@ -468,7 +467,7 @@ def Cal_reset_Dx_Dy_Rss(IC,JC,LC):
     gb.set_value('Sby',Sby)
     gb.set_value('Sbxo',Sbxo)
     gb.set_value('Sbyo',Sbyo)
-
+@jit
 def Cal_UV_VU(IC,JC,KC,LC):
     '''
         计算Uv、Vu的值
@@ -509,6 +508,8 @@ def Cal_UV_VU(IC,JC,KC,LC):
     gb.set_value('U1V',U1V)
     gb.set_value('VU',VU)
     gb.set_value('V1U',V1U)
+
+@jit
 def Cal_UV_VU_2(IC,JC,KC,LC):
     '''
         计算Uv、Vu的值
@@ -547,6 +548,8 @@ def Cal_UV_VU_2(IC,JC,KC,LC):
     gb.set_value('U1V',U1V)
     gb.set_value('VU',VU)
     gb.set_value('V1U',V1U)
+
+@jit
 def Cal_init_STBXY(IC,JC,KC,LC):
     '''
         STBXY的初始化
@@ -564,6 +567,7 @@ def Cal_init_STBXY(IC,JC,KC,LC):
     gb.set_value('RITB',RITB)
     gb.set_value('CDLIMIT',CDLIMIT)
 
+@jit
 def Cal_STBXY(IC,JC,LC):
     '''
         计算底部切应力 STBXY
@@ -625,6 +629,7 @@ def Cal_STBXY(IC,JC,LC):
     gb.set_value('TBX',TBX)
     gb.set_value('TBY',TBY)
 
+@jit
 def Cal_HDMF(IC,JC,LC,KC):
     '''
         计算水平扩散通量
@@ -769,7 +774,7 @@ def Cal_init_Tsxy(IC,JC,KC):
     '''
     '''
     pass
-
+@jit
 def Cal_Exp2T(IC,JC,LC,KC):
     '''
         计算显示右边项
@@ -932,6 +937,7 @@ def Cal_Exp2T(IC,JC,LC,KC):
     gb.set_value('FVHU',FVHU)
     gb.set_value('FVHV',FVHV)
 
+@jit
 def Cal_QVS(IC,JC,LC,KC):
     '''
         读取流量数据
@@ -973,6 +979,7 @@ def Cal_QVS(IC,JC,LC,KC):
     gb.set_value('QSUME',QSUME)
     gb.set_value('QSUM1E',QSUM1E)
 
+@jit
 def Cal_OBC():
     '''
         设置水位边界条件
@@ -1043,11 +1050,7 @@ def Cal_OBC():
     gb.set_value('CE',CE)
     gb.set_value('FP',FP)
 
-
-
-
-
-
+@jit
 def Cal_External(IC,JC,LC,KC):
     '''
         外模态计算水位 U V
@@ -1240,7 +1243,7 @@ def Cal_External(IC,JC,LC,KC):
     gb.set_value('UHDYE',UHDYE)
     gb.set_value('VHDXE',VHDXE)
 
-######################
+@jit
 def Cal_congrad(LC):
     '''
         梯度下降法求解
@@ -1304,7 +1307,8 @@ def Cal_congrad(LC):
         RPCG=RPCGN
         PCG=TMPCG+BETA*PCG
     gb.set_value('P',P)
-#########################################
+
+@jit
 def Cal_CDZC(KC):
     DZC=gb.get_value('DZC')
     CDZD=gb.get_value('CDZD')
@@ -1318,7 +1322,8 @@ def Cal_CDZC(KC):
         CDZR[k]=CDZR[k]*(0.5*(DZC[k]+DZC[k+1]))*(-DZC[1]/(DZC[0]+DZC[1]))
     gb.set_value('CDZR',CDZR)
     gb.set_value('CDZD',CDZD)
-######################################
+
+@jit
 def Reset_2V():
     '''
         倒腾一下变量
@@ -1359,7 +1364,8 @@ def Reset_2V():
     gb.set_value('W',W)
     gb.set_value('W1',W1)
     gb.set_value('W2',W2)
-###########################################
+
+@jit
 def Cal_UVW(IC,JC,KC,LC):
     DZC=gb.get_value('DZC')
     DT=gb.get_value('DT')
@@ -1652,6 +1658,7 @@ def Cal_UVW(IC,JC,KC,LC):
 ###########################################
     gb.set_value('Hp',Hp)
 
+@jit
 def Reset_1V():
     '''
         倒腾一下变量
